@@ -5,13 +5,42 @@ output: github_document
 
 ```{r}
 library(tidyverse)
+library(dplyr)
 library(readxl)
 ```
 
 
 # Problem 1
 ```{r}
+nyc_transit = read_csv("NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>% 
+  janitor::clean_names() %>% 
+  select(line:entry, vending, ada) %>% 
+  mutate(
+    entry = if_else(is.na(entry), FALSE, TRUE)
+  )
 ```
+
+```{r echo = FALSE}
+# data needed for description
+row_nyc_transit = nrow(nyc_transit)
+col_nyc_transit = ncol(nyc_transit)
+
+# data needed for questions
+distinct_station = distinct(nyc_transit,line, station_name, .keep_all = TRUE)
+num_distinct_station = nrow(distinct_station)
+num_ada_compliant = sum(distinct_station$ada, na.rm = TRUE)
+num_no_vending_allow = sum(distinct_station$vending == 'NO')
+pro_no_vending_allow = (num_no_vending_allow/row_nyc_transit) * 100
+```
+inline description about data:
+First, import the data as csv file, and clean it using janitor package. Then, select columns that contain variables as required, and convert the type of entry variable from character to logical using if_else function.
+The cleaned nyc_transit dataframe has line, station name, station latitude/longitude, routes served, entry, entrance type, vending and ada as variables.
+The dimension of the resulting data is `r row_nyc_transit` * `r col_nyc_transit`. The data is not tidy enough because some of the stations are not distinct, we still need more cleaning steps to make it tidier.
+
+questions:
+1. There are `r num_distinct_station` here in New York.
+2. There are `r num_ada_compliant` stations are ADA compliant.
+3. The proportion of station entrances/exits without vending allow is `r pro_no_vending_allow`%.
 
 # Problem 2
 ```{r}
