@@ -1,11 +1,13 @@
 ---
 title: "p8105_hw2_fy2297"
-output: html_document
+output: github_document
 ---
 
-I'm an R Markdown document! 
-
-# Section 1
+```{r}
+library(tidyverse)
+library(readxl)
+```
+# Problem 1
 
 Here's a **code chunk** that samples from 
 a _normal distribution_:
@@ -15,7 +17,47 @@ samp = rnorm(100)
 length(samp)
 ```
 
-# Section 2
+# Problem 2
+```{r}
+# clean and tidy the mr_trash_wheel sheet
+mr_trash_wheel = read_excel("Trash-Wheel-Collection-Totals-7-2020-2.xlsx", 
+                            sheet = 1) %>% 
+  janitor::clean_names() %>% 
+  select(dumpster:homes_powered) %>% 
+  mutate(sports_balls = as.integer(sports_balls)) %>% 
+  mutate(dumpster = as.double(dumpster)) %>% 
+  filter(is.double(dumpster)==TRUE) %>% 
+  drop_na(dumpster) %>% 
+  mutate(sheet_origin = "mr_trash_wheel")
 
-I can take the mean of the sample, too!
-The mean is `r mean(samp)`.
+# clean and tidy the professor_trash_wheel sheet
+pro_trash_wheel = read_excel("Trash-Wheel-Collection-Totals-7-2020-2.xlsx",
+                             sheet = 2) %>% 
+  janitor::clean_names() %>% 
+  drop_na(dumpster) %>% 
+  mutate(sports_balls = as.integer(sports_balls)) %>% 
+  mutate(sheet_origin = "pro_trash_wheel")
+
+# combine these two sheets and clean/tidy it
+com_trash_wheel = bind_rows(mr_trash_wheel, pro_trash_wheel) %>% 
+  janitor::clean_names() %>% 
+  select(sheet_origin, everything())
+
+```
+
+```{r echo = FALSE}
+# data needed for combined dataset descriptions
+num_obs = nrow(com_trash_wheel)
+pro_total_weight_tons = sum(pro_trash_wheel[, 'weight_tons'])
+mr_trash_wheel_2020 = filter(mr_trash_wheel, year == 2020)
+mr_total_sports_balls_2020 = sum(mr_trash_wheel_2020[, 'sports_balls']) 
+```
+inline description about data:
+The resulting dataset (combined) has `r num_obs` observations in total.
+The key variables are 'sheet_origin' because it tells about where the data comes from after combination, 'month' and 'year' are also important because we can know exactly when the data was collected.
+The total weight of trash collected by Professor Trash Wheel is `r pro_total_weight_tons`.
+The total number of sports balls collected by Mr. Trash Wheel in 2020 is `r mr_total_sports_balls_2020`.
+
+
+
+# Problem 3
