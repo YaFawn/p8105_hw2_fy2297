@@ -32,15 +32,16 @@ num_ada_compliant = sum(distinct_station$ada, na.rm = TRUE)
 num_no_vending_allow = sum(distinct_station$vending == 'NO')
 pro_no_vending_allow = (num_no_vending_allow/row_nyc_transit) * 100
 ```
-inline description about data:
+## inline description about data:
 First, import the data as csv file, and clean it using janitor package. Then, select columns that contain variables as required, and convert the type of entry variable from character to logical using if_else function.
 The cleaned nyc_transit dataframe has line, station name, station latitude/longitude, routes served, entry, entrance type, vending and ada as variables.
 The dimension of the resulting data is `r row_nyc_transit` * `r col_nyc_transit`. The data is not tidy enough because some of the stations are not distinct, we still need more cleaning steps to make it tidier.
 
-questions:
+## questions:
 1. There are `r num_distinct_station` here in New York.
 2. There are `r num_ada_compliant` stations are ADA compliant.
 3. The proportion of station entrances/exits without vending allow is `r pro_no_vending_allow`%.
+
 
 # Problem 2
 ```{r}
@@ -77,7 +78,7 @@ pro_total_weight_tons = sum(pro_trash_wheel[, 'weight_tons'])
 mr_trash_wheel_2020 = filter(mr_trash_wheel, year == 2020)
 mr_total_sports_balls_2020 = sum(mr_trash_wheel_2020[, 'sports_balls']) 
 ```
-inline description about data:
+## inline description about data:
 The resulting dataset (combined) has `r num_obs` observations in total.
 The key variables are 'sheet_origin' because it tells about where the data comes from after combination, 'month' and 'year' are also important because we can know exactly when the data was collected.
 The total weight of trash collected by Professor Trash Wheel is `r pro_total_weight_tons`.
@@ -90,22 +91,32 @@ The total number of sports balls collected by Mr. Trash Wheel in 2020 is `r mr_t
 pols_month = read_csv("./data3/pols-month.csv") %>% 
   janitor::clean_names() %>% 
   separate(mon, into = c("year", "month", "day"), sep = '-') %>% 
-  select(-day, -prez_dem, -prez_gop) %>% 
   mutate(
     month = recode(month, `01` = "January", `02` = "Feburary", `03` = "March", `04` = "April", `05` = "May", `06` = "June", `07` = "July", `08` = "August", `09` = "September", `10` = "October", `11` = "November", `12` = "December")
   ) %>% 
   mutate(
-    president = gov_gop + sen_gop + rep_gop + gov_dem + sen_dem + rep_dem
-  )
+    year = as.numeric(year)
+  ) %>% 
+  mutate(
+    president = prez_gop,
+    president = recode(president, '0' = "dem" , '1' = "gop")
+  ) %>% 
+  select(-day, -prez_gop, -prez_dem)
 
 # clean the data in snp.csv
 snp = read_csv("./data3/snp.csv") %>% 
   janitor::clean_names() %>% 
+  #date = as.Date(date, "%d/%m/%Y")
   separate(date, into = c("month", "day", "year"), sep = '/') %>% 
   select(-day) %>%
   mutate(
     month = recode(month, `1` = "January", `2` = "Feburary", `3` = "March", `4` = "April", `5` = "May", `6` = "June", `7` = "July", `8` = "August", `9` = "September", `10` = "October", `11` = "November", `12` = "December")
   ) %>% 
+  mutate(
+    year = as.numeric(year),
+    year = ifelse(year>=50, year + 1900, year + 2000)
+  ) %>% 
+  arrange(year) %>% 
   select(year, month, everything()) 
 
 # clean the data in unemployment.csv
@@ -121,20 +132,30 @@ unemployment = read_csv("./data3/unemployment.csv") %>%
   ) 
 
 # combine the datasets as desired
-com_data = full_join(pols_month, snp, by = "year", "month")
+com_data = full_join(pols_month, snp)
+com_data = full_join(com_data, unemployment)
 ```
-inline description about data:
-The pols-month.csv contains
-The snp.csv contains
-The unemployment.csv contains
-The combined resulting dataset
 
+```{r echo = FALSE}
+# data needed for dataset descriptions
+nrow_pols = nrow(pols_month)
+ncol_pols = ncol(pols_month)
 
+nrow_snp = nrow(snp)
+ncol_snp = ncol(snp)
 
+nrow_unem = nrow(unemployment)
+ncol_unem = ncol(unemployment)
 
+nrow_com_data = nrow(com_data)
+ncol_com_data = ncol(com_data)
 
-
-
+```
+## inline description about data:
+The cleaned pols-month dataset contains "year","month","gov_gop","sen_gop","rep_gop","gov_dem","sen_dem","rep_dem",and "president" as variables, the dimension of the dataset is `r nrow_pols`*`r ncol_pols`, and the year ranges from 1947 to 2015.
+The cleaned snp dataset contains "year","month", and "close" as variables, the dimension fo the dataset is `r nrow_snp`*`r ncol_snp`, and the year ranges from 1950 to 2015.
+The cleaned unemployment dataset contains "year","month", and "unemployment rate" as variables, the dimension fo the dataset is `r nrow_unem`*`r ncol_unem`, and the year ranges from 1948 to 2015.
+The combined resulting dataset contains every variables of cleaned pols-month, snp and unemployment, the dimension fo the dataset is `r nrow_com_data`*`r ncol_com_data`, and the year ranges from 1947 to 2015.
 
 
 
