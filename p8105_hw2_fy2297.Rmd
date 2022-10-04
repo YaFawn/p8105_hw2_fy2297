@@ -46,12 +46,15 @@ The dimension of the resulting data is `r row_nyc_transit` * `r col_nyc_transit`
 # Problem 2
 ```{r}
 # clean and tidy the mr_trash_wheel sheet
-mr_trash_wheel = read_excel("Trash-Wheel-Collection-Totals-7-2020-2.xlsx", 
+mr_trash_wheel = read_excel("Trash Wheel Collection Data.xlsx", 
                             sheet = 1) %>% 
   janitor::clean_names() %>% 
   select(dumpster:homes_powered) %>% 
   mutate(sports_balls = as.integer(sports_balls)) %>% 
-  mutate(dumpster = as.double(dumpster)) %>% 
+  mutate(
+    dumpster = as.double(dumpster),
+    year = as.double(year)
+    ) %>% 
   filter(is.double(dumpster)==TRUE) %>% 
   drop_na(dumpster) %>% 
   mutate(sheet_origin = "mr_trash_wheel")
@@ -65,7 +68,7 @@ pro_trash_wheel = read_excel("Trash-Wheel-Collection-Totals-7-2020-2.xlsx",
   mutate(sheet_origin = "pro_trash_wheel")
 
 # combine these two sheets and clean/tidy it
-com_trash_wheel = bind_rows(mr_trash_wheel, pro_trash_wheel) %>% 
+com_trash_data = bind_rows(mr_trash_wheel, pro_trash_wheel) %>% 
   janitor::clean_names() %>% 
   select(sheet_origin, everything())
 
@@ -73,7 +76,7 @@ com_trash_wheel = bind_rows(mr_trash_wheel, pro_trash_wheel) %>%
 
 ```{r echo = FALSE}
 # data needed for combined dataset descriptions
-num_obs = nrow(com_trash_wheel)
+num_obs = nrow(com_trash_data)
 pro_total_weight_tons = sum(pro_trash_wheel[, 'weight_tons'])
 mr_trash_wheel_2020 = filter(mr_trash_wheel, year == 2020)
 mr_total_sports_balls_2020 = sum(mr_trash_wheel_2020[, 'sports_balls']) 
